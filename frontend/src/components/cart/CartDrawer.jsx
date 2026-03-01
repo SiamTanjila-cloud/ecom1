@@ -1,13 +1,28 @@
 import { Link } from 'react-router-dom';
-import { X, Minus, Plus, ShoppingBag, ArrowRight, Trash2 } from 'lucide-react';
+import { X, Minus, Plus, ShoppingBag, ArrowRight, Trash2, Package } from 'lucide-react';
 import { useCartStore, useUIStore } from '../../store';
 import { formatCurrency } from '../../utils';
 
 const CartDrawer = () => {
-  const { items, removeItem, updateQuantity } = useCartStore();
+  const { items, subtotal, tax, shipping, total } = useCartStore();
   const { cartOpen, toggleCart } = useUIStore();
 
-  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const cartSubtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  // Local state management for cart - works without backend
+  const handleUpdateQuantity = (itemId, newQuantity) => {
+    const { items } = useCartStore.getState();
+    const updated = items.map(item =>
+      item.id === itemId ? { ...item, quantity: Math.max(1, newQuantity) } : item
+    );
+    useCartStore.setState({ items: updated });
+  };
+
+  const handleRemoveItem = (itemId) => {
+    const { items } = useCartStore.getState();
+    const updated = items.filter(item => item.id !== itemId);
+    useCartStore.setState({ items: updated });
+  };
 
   if (!cartOpen) return null;
 
@@ -15,7 +30,7 @@ const CartDrawer = () => {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 transition-opacity"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 transition-opacity animate-fade-in"
         onClick={toggleCart}
       />
 
@@ -60,11 +75,21 @@ const CartDrawer = () => {
                   className="flex gap-3 p-3 bg-slate-50 rounded-xl group"
                 >
                   <div className="w-20 h-20 rounded-lg overflow-hidden bg-white shrink-0">
-                    <img
-                      src={item.image || 'https://via.placeholder.com/80'}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.parentElement.classList.add('flex', 'items-center', 'justify-center', 'bg-slate-100');
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                        <Package className="h-8 w-8 text-slate-300" />
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-medium text-slate-900 truncate">{item.name}</h4>
@@ -72,14 +97,14 @@ const CartDrawer = () => {
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center gap-0 border border-slate-200 rounded-lg overflow-hidden">
                         <button
-                          onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                           className="h-7 w-7 flex items-center justify-center text-slate-500 hover:bg-white transition-colors"
                         >
                           <Minus className="h-3 w-3" />
                         </button>
                         <span className="w-8 text-center text-xs font-semibold border-x border-slate-200">{item.quantity}</span>
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                           className="h-7 w-7 flex items-center justify-center text-slate-500 hover:bg-white transition-colors"
                         >
                           <Plus className="h-3 w-3" />
@@ -91,7 +116,7 @@ const CartDrawer = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => handleRemoveItem(item.id)}
                     className="p-1 text-slate-300 hover:text-rose-500 transition-colors self-start opacity-0 group-hover:opacity-100"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -105,11 +130,23 @@ const CartDrawer = () => {
         {/* Footer */}
         {items.length > 0 && (
           <div className="border-t border-slate-100 px-6 py-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-500">Subtotal</span>
-              <span className="text-lg font-bold text-slate-900">{formatCurrency(subtotal)}</span>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500">Subtotal</span>
+                <span className="font-medium text-slate-900">{formatCurrency(cartSubtotal)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500">Shipping</span>
+                <span className="font-medium text-slate-900">{cartSubtotal > 100 ? 'Free' : formatCurrency(10)}</span>
+              </div>
             </div>
-            <p className="text-xs text-slate-400">Shipping and taxes calculated at checkout</p>
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+              <span className="font-semibold text-slate-900">Total</span>
+              <span className="text-lg font-bold text-slate-900">
+                {formatCurrency(cartSubtotal + (cartSubtotal > 100 ? 0 : 10))}
+              </span>
+            </div>
+            <p className="text-xs text-slate-400">Taxes calculated at checkout</p>
             <div className="flex gap-2">
               <Link to="/cart" onClick={toggleCart} className="flex-1">
                 <button className="w-full py-3 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-all text-sm">

@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { Layout } from './components/layout';
+import ScrollToTop from './components/common/ScrollToTop';
 
 // Pages
 import HomePage from './pages/public/HomePage';
@@ -11,6 +12,8 @@ import CategoryPage from './pages/public/CategoryPage';
 import SearchPage from './pages/public/SearchPage';
 import CartPage from './pages/public/CartPage';
 import CheckoutPage from './pages/public/CheckoutPage';
+import AboutPage from './pages/public/AboutPage';
+import NotFoundPage from './pages/public/NotFoundPage';
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage';
@@ -43,6 +46,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
+        <ScrollToTop />
         <div className="App">
           <Routes>
             {/* Public Routes */}
@@ -54,7 +58,8 @@ function App() {
               <Route path="search" element={<SearchPage />} />
               <Route path="cart" element={<CartPage />} />
               <Route path="checkout" element={<CheckoutPage />} />
-              
+              <Route path="about" element={<AboutPage />} />
+
               {/* Customer Routes */}
               <Route path="profile" element={<ProfilePage />} />
               <Route path="orders" element={<OrdersPage />} />
@@ -81,8 +86,13 @@ function App() {
               <Route path="products" element={<VendorProducts />} />
               <Route path="orders" element={<VendorOrders />} />
             </Route>
+
+            {/* 404 Catch-all */}
+            <Route path="*" element={<Layout />}>
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
           </Routes>
-          
+
           <Toaster
             position="top-right"
             toastOptions={{
