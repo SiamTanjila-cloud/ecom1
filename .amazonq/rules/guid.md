@@ -1,6 +1,6 @@
 You are a senior full-stack architect and SaaS engineer.
 
-Build a PRODUCTION-READY, MODERN, ENTERPRISE-LEVEL, FULLY CUSTOMIZABLE eCommerce platform as a SaaS , like i should able to sell this to multiple customer. use modarn style 
+Build a PRODUCTION-READY, MODERN, ENTERPRISE-LEVEL, FULLY CUSTOMIZABLE eCommerce platform , like i should able to sell this website to multiple customer. use modarn style.
 
 This is NOT a basic demo project.
 It must be scalable, modular, multi-tenant ready, and extremely customizable.
